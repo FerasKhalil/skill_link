@@ -15,7 +15,6 @@
     "db:reset": "npx drizzle-kit drop && npx drizzle-kit push && npx tsx src/db/seed.ts"
   },
   "dependencies": {
-    "@next/swc-linux-x64-gnu": "^16.3.1",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
