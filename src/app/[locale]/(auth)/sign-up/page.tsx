@@ -64,7 +64,7 @@ export default function SignUpPage() {
             placeholder="Al-Khatib" value={lastName} onChange={e => setLastName(e.target.value)} required fullWidth />
         </div>
         <Input label={t(locale, 'auth.signUp.email')} type="email" icon={<Mail className="h-4 w-4" />}
-          placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required fullWidth />
+          placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required fullWidth autoComplete="email" />
         <Input label={t(locale, 'auth.signUp.password')} type={showPassword ? 'text' : 'password'} autoComplete="new-password"
           icon={<Lock className="h-4 w-4" />}
           suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 hover:text-slate-600">
