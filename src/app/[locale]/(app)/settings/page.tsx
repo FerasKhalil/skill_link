@@ -187,11 +187,11 @@ export default function SettingsPage() {
               <CardHeader><CardTitle>{t(locale, 'settings.security')}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <h3 className="text-sm font-medium text-slate-900">{t(locale, 'settings.changePassword')}</h3>
-                <Input label="Current password" type="password" value={passwordForm.currentPassword}
+                <Input label="Current password" type="password" autoComplete="current-password" value={passwordForm.currentPassword}
                   onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} fullWidth />
-                <Input label="New password" type="password" value={passwordForm.newPassword}
+                <Input label="New password" type="password" autoComplete="new-password" value={passwordForm.newPassword}
                   onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} fullWidth />
-                <Input label="Confirm new password" type="password" value={passwordForm.confirmPassword}
+                <Input label="Confirm new password" type="password" autoComplete="new-password" value={passwordForm.confirmPassword}
                   onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} fullWidth />
                 <Button onClick={handleChangePassword} disabled={changingPassword}>
                   {changingPassword ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}

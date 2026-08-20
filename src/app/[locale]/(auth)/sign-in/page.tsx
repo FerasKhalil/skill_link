@@ -62,9 +62,9 @@ export default function SignInPage() {
       {error && <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label={t(locale, 'auth.signIn.email')} type="email" icon={<Mail className="h-4 w-4" />}
+        <Input label={t(locale, 'auth.signIn.email')} type="email" autoComplete="email" icon={<Mail className="h-4 w-4" />}
           placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required fullWidth />
-        <Input label={t(locale, 'auth.signIn.password')} type={showPassword ? 'text' : 'password'}
+        <Input label={t(locale, 'auth.signIn.password')} type={showPassword ? 'text' : 'password'} autoComplete="current-password"
           icon={<Lock className="h-4 w-4" />}
           suffix={<button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 hover:text-slate-600">
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
