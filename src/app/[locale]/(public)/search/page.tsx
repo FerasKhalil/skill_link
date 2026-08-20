@@ -111,7 +111,6 @@ function SearchPageContent() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && setPage(1)}
               placeholder={t(locale, 'common.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
