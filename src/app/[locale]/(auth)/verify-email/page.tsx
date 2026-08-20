@@ -4,16 +4,34 @@ import Link from 'next/link';
 import { useApp } from '@/lib/store';
 import { t } from '@/i18n';
 import { Button } from '@/components/ui/button';
-import { Mail } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 
 export default function VerifyEmailPage() {
-  const { locale } = useApp();
+  const { locale, user, showToast } = useApp();
   const [countdown, setCountdown] = useState(60);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => { setCountdown(c => (c > 0 ? c - 1 : 0)); }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await fetch('/api/v1/auth/verify-email/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user?.email }),
+      });
+      showToast('Verification email sent!', 'success');
+      setCountdown(60);
+    } catch {
+      showToast('Failed to resend email. Please try again.', 'error');
+    } finally {
+      setResending(false);
+    }
+  };
 
   return (
     <div className="text-center">
@@ -23,11 +41,14 @@ export default function VerifyEmailPage() {
       <h1 className="text-2xl font-bold text-slate-900 mb-3">{t(locale, 'auth.verifyEmail.title')}</h1>
       <p className="text-slate-500 mb-8 leading-relaxed">{t(locale, 'auth.verifyEmail.description')}</p>
 
-      <Button variant="secondary" fullWidth size="lg" disabled={countdown > 0}>
-        {countdown > 0
-          ? t(locale, 'auth.verifyEmail.resendIn', { seconds: String(countdown) })
-          : t(locale, 'auth.verifyEmail.resend')
-        }
+      <Button variant="secondary" fullWidth size="lg" disabled={countdown > 0 || resending} onClick={handleResend}>
+        {resending ? (
+          <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Sending...</>
+        ) : countdown > 0 ? (
+          t(locale, 'auth.verifyEmail.resendIn', { seconds: String(countdown) })
+        ) : (
+          t(locale, 'auth.verifyEmail.resend')
+        )}
       </Button>
 
       <div className="mt-6">

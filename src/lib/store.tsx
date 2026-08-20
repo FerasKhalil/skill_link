@@ -10,6 +10,7 @@ interface AuthUser {
   lastName: string;
   displayName: string | null;
   avatarUrl: string | null;
+  phone: string | null;
   locale: string;
   role: 'customer' | 'provider' | 'admin' | 'moderator';
   accountState: string;

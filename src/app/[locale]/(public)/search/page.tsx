@@ -212,8 +212,8 @@ function SearchPageContent() {
         <div className="rounded-xl border border-slate-200 bg-slate-100 h-[500px] flex items-center justify-center text-slate-400">
           <div className="text-center">
             <Map className="h-12 w-12 mx-auto mb-3" />
-            <p className="text-sm">Map view - Interactive map would be integrated here</p>
-            <p className="text-xs mt-1">Showing {pagination.total} providers</p>
+            <p className="text-sm">{t(locale, 'search.mapPlaceholder')}</p>
+            <p className="text-xs mt-1">{t(locale, 'search.showingProviders', { count: String(pagination.total) })}</p>
           </div>
         </div>
       ) : (
@@ -227,8 +227,8 @@ function SearchPageContent() {
               description={t(locale, 'search.noResultsDescription')}
             />
           ) : (
-            results.map(r => (
-              <Link key={r.id} href={`/${locale}/providers/${r.providerId}`}
+            results.map((r, idx) => (
+              <Link key={r.id || r.listingId || idx} href={`/${locale}/providers/${r.providerId}`}
                 className="block p-5 rounded-xl border border-slate-200 bg-white hover:border-emerald-200 hover:shadow-md transition-all">
                 <div className="flex gap-4">
                   <div className="w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-semibold text-lg shrink-0 overflow-hidden">
@@ -236,7 +236,7 @@ function SearchPageContent() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={r.providerAvatar} alt={r.providerName} className="w-full h-full object-cover" />
                     ) : (
-                      r.providerName.split(' ').map(n => n[0]).join('').slice(0, 2)
+                      (r.providerName || '?').split(' ').map(n => n[0]).join('').slice(0, 2)
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -269,7 +269,7 @@ function SearchPageContent() {
                       {r.providerVerified && (
                         <Badge variant="success" size="sm"><Shield className="h-3 w-3" />{t(locale, 'common.verified')}</Badge>
                       )}
-                      {r.deliveryModes.map(mode => (
+                      {(r.deliveryModes || []).map(mode => (
                         <Badge key={mode} variant="outline" size="sm">{getDeliveryModeLabel(mode, locale)}</Badge>
                       ))}
                     </div>

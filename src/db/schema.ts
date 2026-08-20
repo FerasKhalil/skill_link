@@ -483,7 +483,7 @@ export const searchIndex = pgTable('search_index', {
   locationLng: decimal('location_lng', { precision: 10, scale: 7 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (t) => [
-  index('search_index_listing_id_idx').on(t.listingId),
+  uniqueIndex('search_index_listing_id_idx').on(t.listingId),
   index('search_index_category_idx').on(t.categoryId),
   index('search_index_active_verified_idx').on(t.isActive, t.isVerified),
 ]);

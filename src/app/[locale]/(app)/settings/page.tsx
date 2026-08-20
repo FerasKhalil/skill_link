@@ -20,7 +20,7 @@ export default function SettingsPage() {
 
   const [form, setForm] = useState({
     displayName: user?.displayName ?? '',
-    phone: '',
+    phone: user?.phone ?? '',
     locale: locale,
   });
 
@@ -28,6 +28,12 @@ export default function SettingsPage() {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+  });
+
+  const [notifications, setNotifications] = useState({
+    emailNotifications: true,
+    messageNotifications: true,
+    bookingNotifications: true,
   });
 
   const tabs = [
@@ -160,10 +166,15 @@ export default function SettingsPage() {
             <Card>
               <CardHeader><CardTitle>{t(locale, 'settings.notifications')}</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                {['emailNotifications', 'messageNotifications', 'bookingNotifications'].map(key => (
+                {(['emailNotifications', 'messageNotifications', 'bookingNotifications'] as const).map(key => (
                   <label key={key} className="flex items-center justify-between p-3 rounded-lg bg-slate-50">
                     <span className="text-sm font-medium text-slate-700">{t(locale, `settings.${key}`)}</span>
-                    <input type="checkbox" defaultChecked className="h-5 w-5 rounded border-slate-300 text-emerald-600" />
+                    <input
+                      type="checkbox"
+                      checked={notifications[key]}
+                      onChange={e => setNotifications({ ...notifications, [key]: e.target.checked })}
+                      className="h-5 w-5 rounded border-slate-300 text-emerald-600"
+                    />
                   </label>
                 ))}
                 <Button onClick={() => showToast(t(locale, 'settings.saved'), 'success')}>{t(locale, 'settings.saveChanges')}</Button>

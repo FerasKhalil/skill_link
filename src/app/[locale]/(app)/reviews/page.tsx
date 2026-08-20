@@ -20,6 +20,7 @@ export default function ReviewsPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [providerId, setProviderId] = useState('');
+  const [completedBookings, setCompletedBookings] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchReviews = useCallback(async () => {
@@ -34,8 +35,13 @@ export default function ReviewsPage() {
     }
   }, [showToast]);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void fetchReviews(); }, [fetchReviews]);
+  useEffect(() => {
+    void fetchReviews();
+    fetch('/api/v1/bookings?status=completed')
+      .then(r => r.ok ? r.json() : { data: [] })
+      .then(res => setCompletedBookings(res.data || []))
+      .catch(() => {});
+  }, [fetchReviews]);
 
   const handleSubmit = async () => {
     if (!rating || !providerId) {
@@ -69,7 +75,18 @@ export default function ReviewsPage() {
       {showForm && (
         <Card className="mb-6">
           <CardContent className="p-6 space-y-4">
-            <Input label="Provider ID" placeholder="Enter provider profile ID" value={providerId} onChange={e => setProviderId(e.target.value)} fullWidth />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Select Provider</label>
+              <select value={providerId} onChange={e => setProviderId(e.target.value)} required
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none">
+                <option value="">Choose a provider you've booked</option>
+                {completedBookings.map((b: any) => (
+                  <option key={b.id} value={b.providerId || b.providerProfileId}>
+                    {b.providerName || b.title || `Booking #${b.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">{t(locale, 'reviews.form.rating')}</label>
               <StarRating rating={rating} interactive onChange={setRating} size="lg" />

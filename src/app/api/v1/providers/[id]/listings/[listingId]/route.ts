@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getDb, providerProfiles, listings, listingMedia, searchIndex } from '@/db';
+import { getDb, providerProfiles, listings, listingMedia, searchIndex, users } from '@/db';
 import { eq, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth';
 import {
@@ -153,11 +153,14 @@ export async function PUT(
     const newServiceAreas = (data.serviceAreas as string[]) || existing.serviceAreas;
     const newStatus = (data.status as string) || existing.status;
 
+    const [userRow] = await db.select().from(users).where(eq(users.id, provider.userId)).limit(1);
+    const providerName = userRow?.displayName || '';
+
     await db
       .update(searchIndex)
       .set({
-        textEn: [newTitleEn, newDescEn].filter(Boolean).join(' '),
-        textAr: [newTitleAr, newDescAr].filter(Boolean).join(' '),
+        textEn: [newTitleEn, newDescEn, providerName].filter(Boolean).join(' '),
+        textAr: [newTitleAr, newDescAr, providerName].filter(Boolean).join(' '),
         categoryId: newCategoryId,
         subcategoryId: newSubcategoryId,
         priceMin: newPriceMin,

@@ -77,7 +77,7 @@ export default function SignUpPage() {
 
         <Select label={t(locale, 'auth.signUp.preferredLanguage')} fullWidth
           options={[{ value: 'en', label: 'English' }, { value: 'ar', label: 'العربية' }]}
-          value={locale} onChange={() => {}} />
+          value={locale} onChange={() => {}} disabled />
 
         <Checkbox label={t(locale, 'auth.signUp.acceptTerms')} checked={acceptTerms} onChange={e => setAcceptTerms(e.target.checked)} />
         <Checkbox label={t(locale, 'auth.signUp.acceptPrivacy')} checked={acceptPrivacy} onChange={e => setAcceptPrivacy(e.target.checked)} />

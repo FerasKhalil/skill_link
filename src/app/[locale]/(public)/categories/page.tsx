@@ -5,7 +5,7 @@ import { useApp } from '@/lib/store';
 import { t } from '@/i18n';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
-import { BookOpen, ChevronRight } from 'lucide-react';
+import { BookOpen, Wrench, Music, GraduationCap, ChevronRight } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -19,8 +19,9 @@ interface Category {
 
 const icons: Record<string, React.ReactNode> = {
   'book-open': <BookOpen className="h-8 w-8" />,
-  'wrench': <BookOpen className="h-8 w-8" />,
-  'music': <BookOpen className="h-8 w-8" />,
+  'wrench': <Wrench className="h-8 w-8" />,
+  'music': <Music className="h-8 w-8" />,
+  'graduation-cap': <GraduationCap className="h-8 w-8" />,
 };
 
 const jsonFetcher = (url: string) => fetch(url).then(r => {

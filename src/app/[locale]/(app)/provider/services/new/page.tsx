@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/lib/store';
 import { t } from '@/i18n';
@@ -16,7 +16,15 @@ export default function NewServicePage() {
   const { locale, showToast, providerProfile } = useApp();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ title: '', category: '', description: '', deliveryMode: 'onsite', price: '', priceModel: 'hourly' });
+  const [categories, setCategories] = useState<any[]>([]);
+  const [form, setForm] = useState({ title: '', categoryId: '', description: '', deliveryMode: 'onsite', price: '', priceModel: 'hourly' });
+
+  useEffect(() => {
+    fetch('/api/v1/categories')
+      .then(r => r.ok ? r.json() : { data: [] })
+      .then(res => setCategories(res.data || []))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +40,7 @@ export default function NewServicePage() {
         titleAr: form.title,
         descriptionEn: form.description,
         descriptionAr: form.description,
+        categoryId: form.categoryId || undefined,
         pricingModel: form.priceModel,
         priceMin: form.price ? Number(form.price) : undefined,
         priceMax: form.price ? Number(form.price) : undefined,
@@ -80,8 +89,8 @@ export default function NewServicePage() {
             <Input label={t(locale, 'providerOnboarding.services.serviceName')} fullWidth required
               value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <Select label={t(locale, 'providerOnboarding.services.category')} fullWidth
-              options={[{ value: 'tutoring', label: 'Tutoring' }, { value: 'skilled', label: 'Skilled Hand Labour' }, { value: 'instruments', label: 'Instruments' }]}
-              value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
+              options={categories.filter((c: any) => !c.parentId).map((c: any) => ({ value: c.id, label: locale === 'ar' ? c.nameAr : c.nameEn }))}
+              value={form.categoryId} onChange={e => setForm({ ...form, categoryId: e.target.value })} />
             <Textarea label={t(locale, 'providerOnboarding.services.description')} fullWidth
               value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
             <Select label={t(locale, 'search.deliveryMode')} fullWidth

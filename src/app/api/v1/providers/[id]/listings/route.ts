@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getDb, providerProfiles, listings, searchIndex } from '@/db';
+import { getDb, providerProfiles, listings, searchIndex, users } from '@/db';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { requireAuth } from '@/lib/auth';
 import {
@@ -154,11 +154,14 @@ export async function POST(
       })
       .returning();
 
+    const [userRow] = await db.select().from(users).where(eq(users.id, provider.userId)).limit(1);
+    const providerName = userRow?.displayName || '';
+
     await db.insert(searchIndex).values({
       listingId: listing.id,
       providerId: id,
-      textEn: [data.titleEn, data.descriptionEn].filter(Boolean).join(' '),
-      textAr: [data.titleAr, data.descriptionAr].filter(Boolean).join(' '),
+      textEn: [data.titleEn, data.descriptionEn, providerName].filter(Boolean).join(' '),
+      textAr: [data.titleAr, data.descriptionAr, providerName].filter(Boolean).join(' '),
       categoryId: data.categoryId || null,
       subcategoryId: data.subcategoryId || null,
       priceMin: data.priceMin !== undefined ? String(data.priceMin) : null,

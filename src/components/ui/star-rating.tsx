@@ -50,7 +50,7 @@ export function StarRating({ rating, maxRating = 5, size = 'md', interactive = f
       })}
       {showValue && (
         <span className={cn('font-medium text-slate-700', size === 'sm' ? 'text-xs ml-1' : 'text-sm ml-1.5')}>
-          {rating.toFixed(1)}
+          {(rating ?? 0).toFixed(1)}
         </span>
       )}
     </div>
