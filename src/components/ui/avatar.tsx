@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { cn, getInitials } from '@/lib/utils';
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -25,9 +26,11 @@ export function Avatar({ src, alt, name, size = 'md', className, online }: Avata
   return (
     <div className={cn('relative inline-flex shrink-0', className)}>
       {src ? (
-        <img
+        <Image
           src={src}
           alt={alt}
+          width={48}
+          height={48}
           className={cn('rounded-full object-cover', sizeClasses[size])}
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = 'none';

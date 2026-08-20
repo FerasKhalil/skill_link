@@ -1,12 +1,20 @@
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/lib/store';
 import { t } from '@/i18n';
-import { Heart } from 'lucide-react';
-import { mockCategories } from '@/data/mock';
+import { categoriesApi } from '@/lib/api-client';
+
 
 export function Footer() {
   const { locale } = useApp();
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    categoriesApi.list()
+      .then(r => setCategories(r.data || []))
+      .catch(() => {});
+  }, []);
 
   return (
     <footer className="border-t border-slate-200 bg-slate-50">
@@ -26,11 +34,11 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-slate-900 mb-4">{t(locale, 'footer.categories')}</h4>
             <ul className="space-y-2">
-              {mockCategories.map(cat => (
+              {categories.filter((c: any) => !c.parentId).map((cat: any) => (
                 <li key={cat.id}>
                   <Link href={`/${locale}/categories/${cat.slug}`}
                     className="text-sm text-slate-500 hover:text-emerald-600 transition-colors">
-                    {cat.name[locale]}
+                    {locale === 'ar' ? cat.nameAr : cat.nameEn}
                   </Link>
                 </li>
               ))}

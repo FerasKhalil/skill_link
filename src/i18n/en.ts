@@ -66,6 +66,7 @@ const en = {
     languages: 'Languages',
     arabic: 'العربية',
     english: 'English',
+    welcome: 'Welcome',
   },
   nav: {
     home: 'Home',
@@ -214,8 +215,9 @@ const en = {
     },
     profile: {
       title: 'Complete Your Profile',
+      profession: 'Profession',
       displayName: 'Display Name',
-      title: 'Professional Title',
+      professionalTitle: 'Professional Title',
       titlePlaceholder: 'e.g., Mathematics Tutor, Licensed Electrician',
       bio: 'About You',
       bioPlaceholder: 'Tell customers about your experience, qualifications, and what makes you stand out...',

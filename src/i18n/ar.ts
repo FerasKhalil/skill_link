@@ -66,6 +66,7 @@ const ar = {
     languages: 'اللغات',
     arabic: 'العربية',
     english: 'English',
+    welcome: 'مرحباً',
   },
   nav: {
     home: 'الرئيسية',
@@ -214,8 +215,9 @@ const ar = {
     },
     profile: {
       title: 'أكمل ملفك الشخصي',
+      profession: 'المهنة',
       displayName: 'الاسم المعروض',
-      title: 'المسمى المهني',
+      professionalTitle: 'المسمى المهني',
       titlePlaceholder: 'مثال: مدرس رياضيات، كهربائي مرخص',
       bio: 'نبذة عنك',
       bioPlaceholder: 'أخبر العملاء عن خبراتك ومؤهلاتك وما يميزك...',

@@ -1,55 +1,105 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import useSWR from 'swr';
 import { useApp } from '@/lib/store';
 import { t } from '@/i18n';
-import { mockListings, mockCategories } from '@/data/mock';
 import { StarRating } from '@/components/ui/star-rating';
 import { Badge } from '@/components/ui/badge';
-import { getDeliveryModeLabel, getLocalizedText } from '@/lib/utils';
-import { Search, SlidersHorizontal, MapPin, Shield, Grid, Map, X, ChevronDown } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Skeleton, CardSkeleton } from '@/components/ui/skeleton';
+import { getDeliveryModeLabel } from '@/lib/utils';
+import { Search, SlidersHorizontal, MapPin, Shield, Grid, Map, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function SearchPage() {
+interface SearchResult {
+  id: string;
+  listingId: string;
+  titleEn: string;
+  titleAr: string;
+  descriptionEn: string;
+  descriptionAr: string;
+  providerId: string;
+  providerName: string;
+  providerAvatar: string | null;
+  providerVerified: boolean;
+  categoryName: string;
+  subcategoryName: string | null;
+  ratingAvg: number;
+  ratingCount: number;
+  priceMin: number | null;
+  priceMax: number | null;
+  currency: string;
+  deliveryModes: string[];
+  serviceAreas: string[];
+  locationCity: string | null;
+}
+
+interface Category {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameAr: string;
+  icon: string | null;
+  childCount: number;
+  listingCount: number;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  pagination: { page: number; limit: number; total: number; totalPages: number };
+}
+
+const jsonFetcher = (url: string) => fetch(url).then(r => {
+  if (!r.ok) throw new Error(`Request failed: ${r.status}`);
+  return r.json();
+});
+
+function SearchPageContent() {
   const { locale } = useApp();
-  const [query, setQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [deliveryMode, setDeliveryMode] = useState('');
+  const searchParams = useSearchParams();
+
+  const initialQ = searchParams.get('q') || '';
+  const initialCategory = searchParams.get('category') || '';
+  const initialDeliveryMode = searchParams.get('deliveryMode') || '';
+  const initialVerified = searchParams.get('verified') === 'true';
+  const initialSort = searchParams.get('sort') || 'relevance';
+
+  const [query, setQuery] = useState(initialQ);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [verifiedOnly, setVerifiedOnly] = useState(initialVerified);
+  const [deliveryMode, setDeliveryMode] = useState(initialDeliveryMode);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [sortBy, setSortBy] = useState('relevance');
+  const [sortBy, setSortBy] = useState(initialSort);
+  const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      setQuery(params.get('q') || '');
-      setSelectedCategory(params.get('category') || '');
-    }
-  }, []);
+  const apiParams = new URLSearchParams({ page: String(page), limit: '20' });
+  if (query) apiParams.set('q', query);
+  if (selectedCategory) apiParams.set('category', selectedCategory);
+  if (deliveryMode) apiParams.set('deliveryMode', deliveryMode);
+  if (verifiedOnly) apiParams.set('verified', 'true');
+  if (sortBy !== 'relevance') apiParams.set('sort', sortBy);
 
-  const filteredListings = useMemo(() => {
-    let results = [...mockListings];
-    if (query) {
-      const q = query.toLowerCase();
-      results = results.filter(l => l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q));
-    }
-    if (selectedCategory) {
-      const cat = mockCategories.find(c => c.slug === selectedCategory);
-      if (cat) {
-        const catIds = [cat.id, ...(cat.children?.map(c => c.id) || [])];
-        results = results.filter(l => catIds.includes(l.categoryId));
-      }
-    }
-    if (verifiedOnly) {
-      results = results.filter(l => l.provider?.verificationSummary.identity === 'approved');
-    }
-    if (deliveryMode) {
-      results = results.filter(l => l.deliveryModes.some(m => m.mode === deliveryMode && m.enabled));
-    }
-    return results;
-  }, [query, selectedCategory, verifiedOnly, deliveryMode]);
+  const { data: searchRes, isLoading: searchLoading, error: searchError, mutate: refetchSearch } = useSWR<PaginatedResponse<SearchResult>>(
+    `/api/v1/search?${apiParams.toString()}`,
+    jsonFetcher,
+  );
+
+  const { data: catRes } = useSWR<PaginatedResponse<Category>>('/api/v1/categories', jsonFetcher);
+
+  const results = searchRes?.data || [];
+  const pagination = searchRes?.pagination || { page: 1, limit: 20, total: 0, totalPages: 0 };
+  const categories = catRes?.data || [];
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const loading = !mounted || searchLoading;
+  const error = searchError instanceof Error ? searchError.message : null;
 
   const activeFiltersCount = [selectedCategory, verifiedOnly, deliveryMode].filter(Boolean).length;
+
+  const getTitle = (r: SearchResult) => locale === 'ar' ? r.titleAr || r.titleEn : r.titleEn || r.titleAr;
+  const getDescription = (r: SearchResult) => locale === 'ar' ? r.descriptionAr || r.descriptionEn : r.descriptionEn || r.descriptionAr;
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
@@ -61,6 +111,7 @@ export default function SearchPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input type="text" value={query} onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && setPage(1)}
               placeholder={t(locale, 'common.searchPlaceholder')}
               className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" />
           </div>
@@ -93,11 +144,8 @@ export default function SearchPage() {
               <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
                 <option value="">{t(locale, 'search.allCategories')}</option>
-                {mockCategories.map(c => (
-                  <optgroup key={c.id} label={c.name[locale]}>
-                    <option value={c.slug}>{c.name[locale]}</option>
-                    {c.children?.map(sub => <option key={sub.id} value={sub.slug}>  {sub.name[locale]}</option>)}
-                  </optgroup>
+                {categories.map(c => (
+                  <option key={c.id} value={c.slug}>{locale === 'ar' ? c.nameAr : c.nameEn}</option>
                 ))}
               </select>
             </div>
@@ -106,9 +154,9 @@ export default function SearchPage() {
               <select value={deliveryMode} onChange={e => setDeliveryMode(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none">
                 <option value="">{t(locale, 'search.allCategories')}</option>
-                <option value="online">{t(locale, 'common.online')}</option>
-                <option value="provider_location">{t(locale, 'provider.deliveryModes.providerLocation')}</option>
-                <option value="customer_location">{t(locale, 'provider.deliveryModes.customerLocation')}</option>
+                <option value="remote">{t(locale, 'common.online')}</option>
+                <option value="onsite">{t(locale, 'provider.deliveryModes.providerLocation')}</option>
+                <option value="both">{t(locale, 'common.both')}</option>
               </select>
             </div>
             <div className="flex items-end">
@@ -138,70 +186,148 @@ export default function SearchPage() {
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-slate-500">
-          {t(locale, 'search.showingResults', { from: '1', to: String(filteredListings.length), total: String(filteredListings.length) })}
-        </p>
+        <div className="text-sm text-slate-500">
+          {loading ? (
+            <Skeleton className="inline-block h-4 w-48" />
+          ) : (
+            t(locale, 'search.showingResults', {
+              from: String((pagination.page - 1) * pagination.limit + 1),
+              to: String(Math.min(pagination.page * pagination.limit, pagination.total)),
+              total: String(pagination.total),
+            })
+          )}
+        </div>
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 mb-6">
+          <p className="text-sm text-red-700">{error}</p>
+          <button onClick={() => refetchSearch()} className="mt-2 text-sm font-medium text-red-600 hover:text-red-700">
+            Retry
+          </button>
+        </div>
+      )}
 
       {viewMode === 'map' ? (
         <div className="rounded-xl border border-slate-200 bg-slate-100 h-[500px] flex items-center justify-center text-slate-400">
           <div className="text-center">
             <Map className="h-12 w-12 mx-auto mb-3" />
             <p className="text-sm">Map view - Interactive map would be integrated here</p>
-            <p className="text-xs mt-1">Showing {filteredListings.length} providers in Amman</p>
+            <p className="text-xs mt-1">Showing {pagination.total} providers</p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredListings.length === 0 ? (
-            <div className="text-center py-16">
-              <Search className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-1">{t(locale, 'search.noResultsTitle')}</h3>
-              <p className="text-slate-500">{t(locale, 'search.noResultsDescription')}</p>
-            </div>
-          ) : filteredListings.map(listing => (
-            <Link key={listing.id} href={`/${locale}/providers/${listing.provider?.slug}`}
-              className="block p-5 rounded-xl border border-slate-200 bg-white hover:border-emerald-200 hover:shadow-md transition-all">
-              <div className="flex gap-4">
-                <div className="w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-semibold text-lg shrink-0">
-                  {listing.provider?.user.displayName.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{listing.title}</h3>
-                      <p className="text-sm text-slate-500">{listing.provider?.user.displayName}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      {listing.deliveryModes[0]?.pricing[0]?.amount && (
-                        <p className="text-lg font-bold text-slate-900">
-                          {listing.deliveryModes[0].pricing[0].amount} JOD
-                          <span className="text-xs font-normal text-slate-500">/{listing.deliveryModes[0].pricing[0].unit}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-sm text-slate-500 mt-1 line-clamp-2">{listing.description}</p>
-                  <div className="flex items-center gap-3 mt-3 flex-wrap">
-                    <StarRating rating={listing.provider?.rating || 0} size="sm" showValue />
-                    <span className="text-sm text-slate-400">({listing.reviewCount})</span>
-                    <div className="flex items-center gap-1 text-sm text-slate-500">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {listing.provider?.city}
-                    </div>
-                    {listing.provider?.verificationSummary.identity === 'approved' && (
-                      <Badge variant="success" size="sm"><Shield className="h-3 w-3" />{t(locale, 'common.verified')}</Badge>
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)
+          ) : results.length === 0 ? (
+            <EmptyState
+              icon={<Search className="h-8 w-8" />}
+              title={t(locale, 'search.noResultsTitle')}
+              description={t(locale, 'search.noResultsDescription')}
+            />
+          ) : (
+            results.map(r => (
+              <Link key={r.id} href={`/${locale}/providers/${r.providerId}`}
+                className="block p-5 rounded-xl border border-slate-200 bg-white hover:border-emerald-200 hover:shadow-md transition-all">
+                <div className="flex gap-4">
+                  <div className="w-16 h-16 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-semibold text-lg shrink-0 overflow-hidden">
+                    {r.providerAvatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.providerAvatar} alt={r.providerName} className="w-full h-full object-cover" />
+                    ) : (
+                      r.providerName.split(' ').map(n => n[0]).join('').slice(0, 2)
                     )}
-                    {listing.deliveryModes.map(m => (
-                      <Badge key={m.mode} variant="outline" size="sm">{getDeliveryModeLabel(m.mode, locale)}</Badge>
-                    ))}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-semibold text-slate-900">{getTitle(r)}</h3>
+                        <p className="text-sm text-slate-500">{r.providerName}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        {r.priceMin != null && (
+                          <p className="text-lg font-bold text-slate-900">
+                            {r.priceMin} {r.currency}
+                            {r.priceMax != null && r.priceMax !== r.priceMin && (
+                              <span className="text-xs font-normal text-slate-500"> - {r.priceMax} {r.currency}</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm text-slate-500 mt-1 line-clamp-2">{getDescription(r)}</p>
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                      <StarRating rating={r.ratingAvg} size="sm" showValue />
+                      <span className="text-sm text-slate-400">({r.ratingCount})</span>
+                      {r.locationCity && (
+                        <div className="flex items-center gap-1 text-sm text-slate-500">
+                          <MapPin className="h-3.5 w-3.5" />
+                          {r.locationCity}
+                        </div>
+                      )}
+                      {r.providerVerified && (
+                        <Badge variant="success" size="sm"><Shield className="h-3 w-3" />{t(locale, 'common.verified')}</Badge>
+                      )}
+                      {r.deliveryModes.map(mode => (
+                        <Badge key={mode} variant="outline" size="sm">{getDeliveryModeLabel(mode, locale)}</Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))
+          )}
+        </div>
+      )}
+
+      {pagination.totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={pagination.page <= 1}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </button>
+          {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
+            const startPage = Math.max(1, pagination.page - 2);
+            const p = startPage + i;
+            if (p > pagination.totalPages) return null;
+            return (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-9 h-9 rounded-lg text-sm font-medium ${p === pagination.page ? 'bg-emerald-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                {p}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+            disabled={pagination.page >= pagination.totalPages}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-64 mb-4" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+        {Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)}
+      </div>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }
