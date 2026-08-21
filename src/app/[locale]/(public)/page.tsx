@@ -86,7 +86,7 @@ export default function HomePage() {
                 <Search className="h-5 w-5" />
                 {t(locale, 'home.hero.cta')}
               </Link>
-              <Link href={`/${locale}/become-provider`}
+              <Link href={`/${locale}/sign-up`}
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-slate-300 px-8 py-4 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-all">
                 {t(locale, 'home.hero.ctaSecondary')}
                 <ChevronRight className={`h-5 w-5 ${locale === 'ar' ? 'rotate-180' : ''}`} />
@@ -187,7 +187,7 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {topProviders.map(provider => (
-                <Link key={provider.id} href={`/${locale}/providers/${provider.slug}`}
+                <Link key={provider.id} href={`/${locale}/providers/${provider.id}`}
                   className="group p-6 rounded-2xl border border-slate-200 hover:border-emerald-200 hover:shadow-lg transition-all duration-300">
                   <div className="flex items-start gap-3 mb-4">
                     <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-semibold text-sm shrink-0">
@@ -229,7 +229,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t(locale, 'home.ctaSection.title')}</h2>
           <p className="text-lg text-emerald-100 mb-8 max-w-2xl mx-auto">{t(locale, 'home.ctaSection.subtitle')}</p>
-          <Link href={`/${locale}/become-provider`}
+          <Link href={`/${locale}/sign-up`}
             className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-emerald-700 hover:bg-emerald-50 shadow-lg transition-all">
             {t(locale, 'home.ctaSection.button')}
             <ChevronRight className={`h-5 w-5 ${locale === 'ar' ? 'rotate-180' : ''}`} />
